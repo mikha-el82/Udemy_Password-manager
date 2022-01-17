@@ -1,6 +1,7 @@
 from tkinter import *
 from tkinter import messagebox
 from random import choice, randint, shuffle
+import json
 
 DEFAULT_EMAIL = "somebody@gmail.com"
 
@@ -30,6 +31,7 @@ def generate_password():
     window.clipboard_clear()
     window.clipboard_append(generated_password)
 
+
 # ---------------------------- SAVE PASSWORD ------------------------------- #
 
 
@@ -37,20 +39,44 @@ def add_password():
     website = website_entry.get()
     email = user_entry.get()
     password = pwd_entry.get()
+    new_credentials = {
+        website: {
+            "email": email,
+            "password": password,
+        }
+    }
     if len(website) == 0 or len(email) == 0 or len(password) == 0:
         messagebox.showinfo(title="Error!", message="Please don't leave any field empty!")
     else:
-        save_password = messagebox.askokcancel(title=f"New credentials for {website}",
-                                               message=f"Login information:\nEmail/Username: {email}\nPassword:"
-                                                       f" {password}\n"
-                                                       f"Do you want to save the new entry?")
-        if save_password:
-            with open("passwords.txt", "a") as passwords:
-                passwords.write(f"{website} | {email} | {password}\n")
-            website_entry.delete(0, END)
-            user_entry.delete(0, END)
-            user_entry.insert(0, DEFAULT_EMAIL)
-            pwd_entry.delete(0, END)
+        try:
+            with open("passwords.json", "r") as passwords:
+                try: # Reading of data from file
+                    # Reading the old data
+                    data = json.load(passwords)
+                    print(f"Data in file are: {data}")
+                    # Updating with new data
+                    try:
+                        data.update(new_credentials)
+                        print(f"Data are being updated with {new_credentials}.")
+                    except AttributeError:
+                        data = new_credentials
+                        print("Wrong data in existing datafile.")
+                except json.decoder.JSONDecodeError:
+                    data = new_credentials
+                    print("No data in datafile.")
+        except FileNotFoundError:
+            data = new_credentials
+            print("No datafile. Creating new datafile.")
+        finally:
+            with open("passwords.json", "w") as passwords:
+                # Saving updated/new data
+                json.dump(data, passwords, indent=4)
+                print("Dumping data in datafile.")
+
+        website_entry.delete(0, END)
+        user_entry.delete(0, END)
+        user_entry.insert(0, DEFAULT_EMAIL)
+        pwd_entry.delete(0, END)
 
 
 # ---------------------------- UI SETUP ------------------------------- #
