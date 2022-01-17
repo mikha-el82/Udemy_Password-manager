@@ -3,6 +3,7 @@ from tkinter import messagebox
 from random import choice, randint, shuffle
 import json
 
+
 DEFAULT_EMAIL = "somebody@gmail.com"
 
 
@@ -50,7 +51,7 @@ def add_password():
     else:
         try:
             with open("passwords.json", "r") as passwords:
-                try: # Reading of data from file
+                try:  # Reading of data from file
                     # Reading the old data
                     data = json.load(passwords)
                     print(f"Data in file are: {data}")
