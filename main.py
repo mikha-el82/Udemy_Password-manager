@@ -37,6 +37,7 @@ def generate_password():
 
 
 def add_password():
+    global data
     website = website_entry.get()
     email = user_entry.get()
     password = pwd_entry.get()
@@ -51,23 +52,23 @@ def add_password():
     else:
         try:
             with open("passwords.json", "r") as passwords:
-                try:  # Reading of data from file
-                    # Reading the old data
-                    data = json.load(passwords)
-                    print(f"Data in file are: {data}")
-                    # Updating with new data
-                    try:
-                        data.update(new_credentials)
-                        print(f"Data are being updated with {new_credentials}.")
-                    except AttributeError:
-                        data = new_credentials
-                        print("Wrong data in existing datafile.")
-                except json.decoder.JSONDecodeError:
-                    data = new_credentials
-                    print("No data in datafile.")
-        except FileNotFoundError:
+                # Reading the old data
+                data = json.load(passwords)
+            print(f"Data in file are: {data}")
+            # Updating with new data
+            data.update(new_credentials)
+            print(f"Data are being updated with {new_credentials}.")
+        except json.decoder.JSONDecodeError:
+            data = new_credentials
+            print("No data in datafile.")
+        except (FileNotFoundError, AttributeError) as error_message:
             data = new_credentials
             print("No datafile. Creating new datafile.")
+            print("or")
+            print("Wrong data in existing datafile.")
+            print(error_message)
+            print(type(error_message))
+
         finally:
             with open("passwords.json", "w") as passwords:
                 # Saving updated/new data
