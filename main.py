@@ -3,7 +3,6 @@ from tkinter import messagebox
 from random import choice, randint, shuffle
 import json
 
-
 DEFAULT_EMAIL = "somebody@gmail.com"
 
 
@@ -35,9 +34,8 @@ def generate_password():
 
 # ---------------------------- SAVE PASSWORD ------------------------------- #
 
-
 def add_password():
-    global data
+    data = None
     website = website_entry.get()
     email = user_entry.get()
     password = pwd_entry.get()
@@ -58,16 +56,14 @@ def add_password():
             # Updating with new data
             data.update(new_credentials)
             print(f"Data are being updated with {new_credentials}.")
-        except json.decoder.JSONDecodeError:
+        except (json.decoder.JSONDecodeError, AttributeError):
             data = new_credentials
             print("No data in datafile.")
-        except (FileNotFoundError, AttributeError) as error_message:
-            data = new_credentials
-            print("No datafile. Creating new datafile.")
             print("or")
             print("Wrong data in existing datafile.")
-            print(error_message)
-            print(type(error_message))
+        except FileNotFoundError:
+            data = new_credentials
+            print("No datafile. Creating new datafile.")
 
         finally:
             with open("passwords.json", "w") as passwords:
@@ -80,8 +76,32 @@ def add_password():
         user_entry.insert(0, DEFAULT_EMAIL)
         pwd_entry.delete(0, END)
 
+# ---------------------------- FIND PASSWORD ------------------------------- #
+
+
+def find_password():
+    search_for = website_entry.get()
+    if search_for == "":
+        messagebox.showinfo(title="Error!", message="Please type in website name!")
+    else:
+        try:
+            with open("passwords.json") as passwords:
+                # search for website
+                data = json.load(passwords)
+        except FileNotFoundError:
+            messagebox.showinfo(title="Error!", message="No Data File Found.")
+        except json.decoder.JSONDecodeError:
+            messagebox.showinfo(title="Error!", message="Data File Corrupted.")
+        else:
+            if search_for in data:
+                email = data[search_for]["email"]
+                pwd = data[search_for]["password"]
+                messagebox.showinfo(title=search_for, message=f"Email:/Username: {email}\nPassword: {pwd}")
+            else:
+                messagebox.showinfo(title="Error!", message=f"No details for the website '{search_for}' exist.")
 
 # ---------------------------- UI SETUP ------------------------------- #
+
 
 window = Tk()
 window.title("Password Manager")
@@ -102,19 +122,21 @@ pwd_txt = Label(text="Password: ")
 pwd_txt.grid(column=0, row=3, sticky="E")
 
 # Entries
-website_entry = Entry(width=45)
-website_entry.grid(column=1, row=1, columnspan=2, sticky="EW")
+website_entry = Entry(width=35)
+website_entry.grid(column=1, row=1, sticky="W")
 website_entry.focus()
 user_entry = Entry()
 user_entry.insert(0, DEFAULT_EMAIL)
 user_entry.grid(column=1, row=2, columnspan=2, sticky="EW")
-pwd_entry = Entry(width=30)
+pwd_entry = Entry(width=35)
 pwd_entry.grid(column=1, row=3, sticky="W")
 
+search_btn = Button(text="Search", width=14, command=find_password)
+search_btn.grid(column=2, row=1, sticky="E")
 generate_btn = Button(text="Generate Password", command=generate_password)
-generate_btn.grid(column=2, row=3)
-
-add_btn = Button(text="Add", command=add_password)
+generate_btn.grid(column=2, row=3, sticky="E")
+add_btn = Button(text="Add", width=30, command=add_password)
 add_btn.grid(column=1, row=4, columnspan=2, sticky="EW")
+
 
 window.mainloop()
